@@ -354,6 +354,22 @@ void Input_Init(void) {
     LCD_SetLocation(&lcd,  8, 0); LCD_WriteString(&lcd, "m(");
     LCD_SetLocation(&lcd, 14, 0); LCD_WriteString(&lcd, "m)");
   #endif
+
+  #if defined(SUPPORT_BUTTONS_LEFT) || defined(SUPPORT_BUTTONS_RIGHT)
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+    GPIO_InitStruct.Pin = BUTTON1_PIN;
+    HAL_GPIO_DeInit(BUTTON1_PORT, BUTTON1_PIN);
+    HAL_GPIO_Init(BUTTON1_PORT, &GPIO_InitStruct);
+    
+    HAL_GPIO_DeInit(BUTTON2_PORT, BUTTON2_PIN);
+    GPIO_InitStruct.Pin = BUTTON2_PIN;
+    HAL_GPIO_Init(BUTTON2_PORT, &GPIO_InitStruct);
+  #endif
 }
 
 /**
@@ -715,6 +731,20 @@ void poweroffPressCheck(void) {
       poweroff();                                             // release power-latch
     }
   #endif
+}
+
+uint8_t emergencyStopTripped = 0;
+
+uint8_t emergencyStopCheck(void) {
+  #if defined(ENABLE_EMERGENCY_STOP)
+    if(!HAL_GPIO_ReadPin(BUTTON1_PORT, BUTTON1_PIN)) {
+      emergencyStopTripped = 1;
+    } 
+    else if(HAL_GPIO_ReadPin(BUTTON2_PORT, BUTTON2_PIN)) {
+      emergencyStopTripped = 0;
+    }
+  #endif
+  return emergencyStopTripped /*| HAL_GPIO_ReadPin(BUTTON1_PORT, BUTTON1_PIN) << 1 | HAL_GPIO_ReadPin(BUTTON2_PORT, BUTTON2_PIN) << 2*/;
 }
 
 

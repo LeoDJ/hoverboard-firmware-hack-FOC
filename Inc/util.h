@@ -76,6 +76,7 @@ void electricBrake(uint16_t speedBlend, uint8_t reverseDir);
 // Poweroff Functions
 void poweroff(void);
 void poweroffPressCheck(void);
+uint8_t emergencyStopCheck(void);
 
 // Read Command Function
 void readCommand(void);
