@@ -429,6 +429,14 @@ int main(void) {
       }
     #endif
 
+    // ####### HANDLE EMERGENCY STOP INPUT #######
+    uint8_t emergencyStopActivated = emergencyStopCheck();
+    if(emergencyStopActivated) {
+      // set speeds to 0 so it actively breaks in speed mode
+      pwml = 0;
+      pwmr = 0;
+    }
+
     // ####### FEEDBACK SERIAL OUT #######
     #if defined(FEEDBACK_SERIAL_USART2) || defined(FEEDBACK_SERIAL_USART3)
       if (main_loop_counter % 2 == 0) {    // Send data periodically every 10 ms
@@ -451,7 +459,10 @@ int main(void) {
         #endif
         #if defined(FEEDBACK_SERIAL_USART3)
           if(__HAL_DMA_GET_COUNTER(huart3.hdmatx) == 0) {
-            Feedback.cmdLed         = (uint16_t)sideboard_leds_R;
+            // Feedback.cmdLed         = (uint16_t)sideboard_leds_R;
+            // Feedback.cmdLed         = (uint16_t)(rtY_Left.z_errCode << 8 | rtY_Right.z_errCode);
+            Feedback.cmdLed         = (uint16_t)(emergencyStopActivated);
+            // Feedback.cmdLed         = (uint16_t)(GPIOA->IDR & 0xC);
             Feedback.checksum       = (uint16_t)(Feedback.start ^ Feedback.cmd1 ^ Feedback.cmd2 ^ Feedback.speedR_meas ^ Feedback.speedL_meas 
                                                ^ Feedback.batVoltage ^ Feedback.boardTemp ^ Feedback.cmdLed);
 
@@ -471,7 +482,7 @@ int main(void) {
       enable        = 0;
       buzzerFreq    = 8;
       buzzerPattern = 1;
-    } else if (timeoutFlagADC || timeoutFlagSerial || timeoutCnt > TIMEOUT) { // beep in case of ADC timeout, Serial timeout or General timeout - fast beep      
+    } else if (timeoutFlagADC || timeoutFlagSerial || timeoutCnt > TIMEOUT || emergencyStopActivated) { // beep in case of ADC timeout, Serial timeout or General timeout - fast beep      
       buzzerFreq    = 24;
       buzzerPattern = 1;
     } else if (TEMP_WARNING_ENABLE && board_temp_deg_c >= TEMP_WARNING) {  // beep if mainboard gets hot

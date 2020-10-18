@@ -77,6 +77,7 @@ void cruiseControl(uint8_t button);
 // Poweroff Functions
 void poweroff(void);
 void poweroffPressCheck(void);
+uint8_t emergencyStopCheck(void);
 
 // Read Command Function
 void readCommand(void);
